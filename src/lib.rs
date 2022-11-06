@@ -1,7 +1,7 @@
 //! SSD1306 OLED display driver.
 //!
 //! This crate provides a driver interface to the popular SSD1306 monochrome OLED display driver. It
-//! supports I2C and SPI via the [`display_interface`](https://docs.rs/display_interface) crate.
+//! supports I2C and SPI via `embedded-hal-async` traits.
 //!
 //! The main driver is created using [`Ssd1306::new`] which accepts an interface instance, display
 //! size, rotation and mode. The following display modes are supported:
@@ -15,81 +15,7 @@
 //! # Examples
 //!
 //! Examples can be found in [the examples/
-//! folder](https://github.com/jamwaffles/ssd1306/blob/master/examples)
-//!
-//! ## Draw some text to the display
-//!
-//! Uses [`BufferedGraphicsMode`] and [embedded_graphics](https://docs.rs/embedded-graphics). [See
-//! the complete example
-//! here](https://github.com/jamwaffles/ssd1306/blob/master/examples/text_i2c.rs).
-//!
-//! ```rust
-//! # use ssd1306::test_helpers::I2cStub;
-//! # let i2c = I2cStub;
-//! use embedded_graphics::{
-//!     mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
-//!     pixelcolor::BinaryColor,
-//!     prelude::*,
-//!     text::{Baseline, Text},
-//! };
-//! use ssd1306::{mode::BufferedGraphicsMode, prelude::*, I2CDisplayInterface, Ssd1306};
-//!
-//! let interface = I2CDisplayInterface::new(i2c);
-//! let mut display = Ssd1306::new(
-//!     interface,
-//!     DisplaySize128x64,
-//!     DisplayRotation::Rotate0,
-//! ).into_buffered_graphics_mode();
-//! display.init().unwrap();
-//!
-//! let text_style = MonoTextStyleBuilder::new()
-//!     .font(&FONT_6X10)
-//!     .text_color(BinaryColor::On)
-//!     .build();
-//!
-//! Text::with_baseline("Hello world!", Point::zero(), text_style, Baseline::Top)
-//!     .draw(&mut display)
-//!     .unwrap();
-//!
-//! Text::with_baseline("Hello Rust!", Point::new(0, 16), text_style, Baseline::Top)
-//!     .draw(&mut display)
-//!     .unwrap();
-//!
-//! display.flush().unwrap();
-//! ```
-//!
-//! ## Write text to the display without a framebuffer
-//!
-//! Uses [`TerminalMode`]. [See the complete example
-//! here](https://github.com/jamwaffles/ssd1306/blob/master/examples/terminal_i2c.rs).
-//!
-//! ```rust
-//! # use ssd1306::test_helpers::I2cStub;
-//! # let i2c = I2cStub;
-//! use core::fmt::Write;
-//! use ssd1306::{mode::TerminalMode, prelude::*, I2CDisplayInterface, Ssd1306};
-//!
-//! let interface = I2CDisplayInterface::new(i2c);
-//!
-//! let mut display = Ssd1306::new(
-//!     interface,
-//!     DisplaySize128x64,
-//!     DisplayRotation::Rotate0,
-//! ).into_terminal_mode();
-//! display.init().unwrap();
-//! display.clear().unwrap();
-//!
-//! // Spam some characters to the display
-//! for c in 97..123 {
-//!     let _ = display.write_str(unsafe { core::str::from_utf8_unchecked(&[c]) });
-//! }
-//! for c in 65..91 {
-//!     let _ = display.write_str(unsafe { core::str::from_utf8_unchecked(&[c]) });
-//! }
-//!
-//! // The `write!()` macro is also supported
-//! write!(display, "Hello, {}", "world");
-//! ```
+//! folder](https://github.com/kalkyl/ssd1306-async/blob/main/examples)
 //!
 //! [featureset]: https://github.com/jamwaffles/embedded-graphics#features
 //! [`BufferedGraphicsMode`]: crate::mode::BufferedGraphicsMode

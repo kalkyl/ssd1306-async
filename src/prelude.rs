@@ -1,10 +1,8 @@
 //! Crate prelude
 
-pub use crate::WriteOnlyDataCommand;
-// pub use display_interface_i2c::I2CInterface;
-// pub use display_interface_spi::{SPIInterface, SPIInterfaceNoCS};
 pub use crate::i2c_interface::I2CDisplayInterface;
 pub use crate::spi_interface::{SPIInterface, SPIInterfaceNoCS};
+pub use crate::WriteOnlyDataCommand;
 
 pub use super::{
     brightness::Brightness,
