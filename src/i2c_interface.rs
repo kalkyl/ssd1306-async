@@ -1,11 +1,8 @@
 //! I2C interface factory
 
-// use display_interface_i2c::I2CInterface;
-
+use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
 use core::future::Future;
 use embedded_hal_async as hal;
-use crate::{DisplayError, WriteOnlyDataCommand, DataFormat};
-
 
 /// Helper struct to create preconfigured I2C interfaces for the display.
 #[derive(Debug, Copy, Clone)]
@@ -105,17 +102,18 @@ where
                     // Data mode
                     writebuf[0] = self.data_byte;
 
-                    for c in slice
-                        .chunks(16) {
-                            let chunk_len = c.len();
-    
-                            // Copy over all data from buffer, leaving the data command byte intact
-                            writebuf[1..=chunk_len].copy_from_slice(c);
-    
-                            self.i2c.write(self.addr, &writebuf[0..=chunk_len]).await.map_err(|_| DisplayError::BusWriteError)?;
+                    for c in slice.chunks(16) {
+                        let chunk_len = c.len();
 
-                        }
-                        
+                        // Copy over all data from buffer, leaving the data command byte intact
+                        writebuf[1..=chunk_len].copy_from_slice(c);
+
+                        self.i2c
+                            .write(self.addr, &writebuf[0..=chunk_len])
+                            .await
+                            .map_err(|_| DisplayError::BusWriteError)?;
+                    }
+
                     Ok(())
                 }
                 DataFormat::U8Iter(iter) => {
@@ -153,4 +151,3 @@ where
         }
     }
 }
-
