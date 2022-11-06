@@ -10,15 +10,6 @@ Async I2C and SPI (4 wire) driver for the SSD1306 OLED display.
 
 ## [Changelog](CHANGELOG.md)
 
-## [Examples](examples)
-
-This crate uses [`probe-run`](https://crates.io/crates/probe-run) to run the examples. Once set up,
-it should be as simple as `cargo run --example <example name> --release`.
-
-From [`examples/image_i2c.rs`](examples/image_i2c.rs):
-
-
-
 ## License
 
 Licensed under either of
