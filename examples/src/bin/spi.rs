@@ -28,7 +28,6 @@ async fn main(_spawner: Spawner) {
     let rst = p.PIN_15;
     let cs = p.PIN_9;
     let dc = p.PIN_8;
-    let miso = p.PIN_12;
     let mosi = p.PIN_11;
     let clk = p.PIN_10;
 
@@ -39,15 +38,7 @@ async fn main(_spawner: Spawner) {
     config.phase = spi::Phase::CaptureOnSecondTransition;
     config.polarity = spi::Polarity::IdleHigh;
 
-    let mut spi = Spi::new(
-        p.SPI1,
-        clk,
-        mosi,
-        miso,
-        p.DMA_CH0,
-        p.DMA_CH1,
-        Config::default(),
-    );
+    let mut spi = Spi::new_txonly(p.SPI1, clk, mosi, p.DMA_CH0, Config::default());
 
     let dc = Output::new(dc, Level::Low);
     let cs = Output::new(cs, Level::Low);
