@@ -3,9 +3,9 @@
 use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
 use core::future::Future;
 type Result = core::result::Result<(), DisplayError>;
-use embedded_hal_async::spi::{SpiBus, SpiDevice};
 use core::convert::Infallible;
 use embedded_hal::digital::v2::OutputPin;
+use embedded_hal_async::spi::{SpiBus, SpiDevice};
 
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
@@ -13,7 +13,10 @@ where
     SPI::Bus: SpiBus,
 {
     match words {
-        DataFormat::U8(slice) => spi.write(slice).await.map_err(|_| DisplayError::BusWriteError),
+        DataFormat::U8(slice) => spi
+            .write(slice)
+            .await
+            .map_err(|_| DisplayError::BusWriteError),
         DataFormat::U16(slice) => {
             use byte_slice_cast::*;
             spi.write(slice.as_byte_slice())
@@ -47,7 +50,9 @@ where
                 i += 1;
 
                 if i == buf.len() {
-                    spi.write(&buf).await.map_err(|_| DisplayError::BusWriteError)?;
+                    spi.write(&buf)
+                        .await
+                        .map_err(|_| DisplayError::BusWriteError)?;
                     i = 0;
                 }
             }
@@ -110,94 +115,19 @@ where
             }
 
             Ok(())
-        }
-        // _ => Err(DisplayError::DataFormatNotImplemented),
-    }
-}
-
-/// SPI display interface.
-///
-/// This combines the SPI peripheral and a data/command as well as a chip-select pin
-pub struct SPIInterface<SPI, DC, CS> {
-    spi_no_cs: SPIInterfaceNoCS<SPI, DC>,
-    cs: CS,
-}
-
-impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
-where
-    SPI: SpiDevice + 'static,
-    SPI::Bus: SpiBus,
-    DC: OutputPin<Error = Infallible> + 'static,
-    CS: OutputPin<Error = Infallible> + 'static,
-{
-    /// Create new SPI interface for communication with a display driver
-    pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
-        Self {
-            spi_no_cs: SPIInterfaceNoCS::new(spi, dc),
-            cs,
-        }
-    }
-
-    /// Consume the display interface and return
-    /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC, CS) {
-        let (spi, dc) = self.spi_no_cs.release();
-        (spi, dc, self.cs)
-    }
-
-    async fn with_cs<'a, F, Fut>(
-        &'a mut self,
-        f: F
-    ) 
-         -> Result 
-         
-         where 
-            F: FnOnce(&'a mut SPIInterfaceNoCS<SPI, DC>) -> Fut + 'a,
-        Fut: Future<Output = Result> + 'a,{
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        let result = f(&mut self.spi_no_cs).await;
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        result
-    }
-}
-
-impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
-where
-    SPI: SpiDevice + 'static,
-    SPI::Bus: SpiBus,
-    DC: OutputPin<Error = Infallible> + 'static,
-    CS: OutputPin<Error = Infallible> + 'static,
-{
-    type Error = DisplayError;
-    type WriteFuture<'a> = impl Future<Output = Result> + 'a where Self: 'a;
-    type DataFuture<'a> = impl Future<Output = Result> + 'a where Self: 'a;
-
-    fn send_commands<'a>(&'a mut self, cmds: DataFormat<'a>) -> Self::WriteFuture<'a> {
-        async move {
-            self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
-                .await
-        }
-    }
-
-    fn send_data<'a>(&'a mut self, buf: DataFormat<'a>) -> Self::DataFuture<'a> {
-        async move { self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf)).await }
+        } // _ => Err(DisplayError::DataFormatNotImplemented),
     }
 }
 
 /// SPI display interface.
 ///
 /// This combines the SPI peripheral and a data/command pin
-pub struct SPIInterfaceNoCS<SPI, DC> {
+pub struct SPIInterface<SPI, DC> {
     spi: SPI,
     dc: DC,
 }
 
-impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
+impl<SPI, DC> SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
     SPI::Bus: SpiBus,
@@ -215,7 +145,7 @@ where
     }
 }
 
-impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
+impl<SPI, DC> WriteOnlyDataCommand for SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
     SPI::Bus: SpiBus,

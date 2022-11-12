@@ -93,8 +93,8 @@ pub enum Command {
 impl Command {
     /// Send command to SSD1306
     pub async fn send<'a, T>(self, iface: &'a mut T) -> Result<(), T::Error>
-    where 
-        T: WriteOnlyDataCommand
+    where
+        T: WriteOnlyDataCommand,
     {
         // Transform command into a fixed size array of 7 u8 and the real length for sending
         let (data, len) = match self {

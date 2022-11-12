@@ -1,7 +1,7 @@
 //! Crate prelude
 
 pub use crate::i2c_interface::I2CDisplayInterface;
-pub use crate::spi_interface::{SPIInterface, SPIInterfaceNoCS};
+pub use crate::spi_interface::SPIInterface;
 pub use crate::WriteOnlyDataCommand;
 
 pub use super::{

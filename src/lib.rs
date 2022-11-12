@@ -47,7 +47,7 @@ mod spi_interface;
 
 pub use crate::i2c_interface::I2CDisplayInterface;
 use crate::mode::BasicMode;
-pub use crate::spi_interface::{SPIInterface, SPIInterfaceNoCS};
+pub use crate::spi_interface::SPIInterface;
 use crate::DataFormat::U8;
 use brightness::Brightness;
 use command::{AddrMode, Command, VcomhLevel};
@@ -403,23 +403,7 @@ where
 }
 
 // SPI-only reset
-impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterfaceNoCS<SPI, DC>, SIZE, MODE> {
-    /// Reset the display.
-    pub fn reset<RST, DELAY, PinE>(
-        &mut self,
-        rst: &mut RST,
-        delay: &mut DELAY,
-    ) -> Result<(), Error<(), PinE>>
-    where
-        RST: OutputPin<Error = PinE>,
-        DELAY: DelayMs<u8>,
-    {
-        inner_reset(rst, delay)
-    }
-}
-
-// SPI-only reset
-impl<SPI, DC, CS, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC, CS>, SIZE, MODE> {
+impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC>, SIZE, MODE> {
     /// Reset the display.
     pub fn reset<RST, DELAY, PinE>(
         &mut self,
