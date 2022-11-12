@@ -31,7 +31,6 @@ async fn main(_spawner: Spawner) {
     let miso = p.PIN_12;
     let mosi = p.PIN_11;
     let clk = p.PIN_10;
-    let fake_cs = p.PIN_13;
 
     // create SPI
     let mut config = spi::Config::default();
@@ -52,11 +51,12 @@ async fn main(_spawner: Spawner) {
 
     let dc = Output::new(dc, Level::Low);
     let cs = Output::new(cs, Level::Low);
-    let rst = Output::new(rst, Level::Low);
-    let fake_cs = Output::new(fake_cs, Level::Low);
+    let mut rst = Output::new(rst, Level::Low);
+    Timer::after(Duration::from_millis(100)).await;
+    rst.set_high();
 
-    let device = ExclusiveDevice::new(spi, fake_cs);
-    let interface = ssd1306_async::SPIInterface::new(device, dc, cs);
+    let device = ExclusiveDevice::new(spi, cs);
+    let interface = ssd1306_async::SPIInterface::new(device, dc);
 
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
