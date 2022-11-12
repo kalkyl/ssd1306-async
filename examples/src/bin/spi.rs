@@ -25,10 +25,15 @@ async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     info!("Hello World!");
 
+    // this is labelled RES on SSD1306. not present in all configurations.
     let rst = p.PIN_15;
+    // this is labelled CS on SSD1306
     let cs = p.PIN_9;
+    // this is labelled DC or D/C on SSD1306. not present in all configurations.
     let dc = p.PIN_8;
+    // this is labelled D1 or SDIN on SSD1306
     let mosi = p.PIN_11;
+    // this is labelled D0 or SCLK on SSD1306
     let clk = p.PIN_10;
 
     // create SPI
@@ -42,10 +47,14 @@ async fn main(_spawner: Spawner) {
 
     let dc = Output::new(dc, Level::Low);
     let cs = Output::new(cs, Level::Low);
+
+    // Start with the display in reset for 100ms
+    // If your screen doesn't have reset you can skip this step
     let mut rst = Output::new(rst, Level::Low);
     Timer::after(Duration::from_millis(100)).await;
     rst.set_high();
 
+    // We aren't sharing this SPI bus so use ExclusiveDevice.
     let device = ExclusiveDevice::new(spi, cs);
     let interface = ssd1306_async::SPIInterface::new(device, dc);
 
