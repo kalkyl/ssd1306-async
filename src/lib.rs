@@ -22,7 +22,8 @@
 //! [`TerminalMode`]: crate::mode::TerminalMode
 
 #![no_std]
-#![feature(type_alias_impl_trait)]
+#![feature(type_alias_impl_trait, async_fn_in_trait, impl_trait_projections)]
+#![allow(incomplete_features)]
 // #![deny(missing_debug_implementations)]
 // #![deny(missing_docs)]
 // #![deny(warnings)]
@@ -51,7 +52,6 @@ pub use crate::spi_interface::SPIInterface;
 use crate::DataFormat::U8;
 use brightness::Brightness;
 use command::{AddrMode, Command, VcomhLevel};
-use core::future::Future;
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::OutputPin};
 use error::Error;
 use mode::{BufferedGraphicsMode, TerminalMode};
@@ -477,16 +477,10 @@ pub enum DataFormat<'a> {
 /// implementation when corresponding method is called.
 pub trait WriteOnlyDataCommand {
     type Error;
-    type WriteFuture<'a>: Future<Output = Result<(), Self::Error>>
-    where
-        Self: 'a;
-    type DataFuture<'a>: Future<Output = Result<(), Self::Error>>
-    where
-        Self: 'a;
 
     /// Send a batch of commands to display
-    fn send_commands<'a>(&'a mut self, cmd: DataFormat<'a>) -> Self::WriteFuture<'a>;
+    async fn send_commands(&mut self, cmd: DataFormat) -> Result<(), Self::Error>;
 
     /// Send pixel data to display
-    fn send_data<'a>(&'a mut self, buf: DataFormat<'a>) -> Self::DataFuture<'a>;
+    async fn send_data(&mut self, buf: DataFormat) -> Result<(), Self::Error>;
 }

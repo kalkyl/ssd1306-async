@@ -1,7 +1,6 @@
 //! SPI interface factory
 
 use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
-use core::future::Future;
 type Result = core::result::Result<(), DisplayError>;
 use core::convert::Infallible;
 use embedded_hal::digital::v2::OutputPin;
@@ -152,26 +151,20 @@ where
     DC: OutputPin<Error = Infallible>,
 {
     type Error = DisplayError;
-    type WriteFuture<'a> = impl Future<Output = Result> + 'a where Self: 'a;
-    type DataFuture<'a> = impl Future<Output = Result> + 'a where Self: 'a;
 
-    fn send_commands<'a>(&'a mut self, cmds: DataFormat<'a>) -> Self::WriteFuture<'a> {
-        async move {
-            // 1 = data, 0 = command
-            self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+    async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
-            // Send words over SPI
-            send_u8(&mut self.spi, cmds).await
-        }
+        // Send words over SPI
+        send_u8(&mut self.spi, cmds).await
     }
 
-    fn send_data<'a>(&'a mut self, buf: DataFormat<'a>) -> Self::DataFuture<'a> {
-        async move {
-            // 1 = data, 0 = command
-            self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+    async fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
-            // Send words over SPI
-            send_u8(&mut self.spi, buf).await
-        }
+        // Send words over SPI
+        send_u8(&mut self.spi, buf).await
     }
 }

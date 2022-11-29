@@ -7,7 +7,6 @@ use crate::{
     Ssd1306,
 };
 use crate::{DisplayError, WriteOnlyDataCommand};
-use core::future::Future;
 
 /// Buffered graphics mode.
 ///
@@ -49,22 +48,18 @@ where
     SIZE: DisplaySize,
 {
     type Error = DisplayError;
-    type WriteFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
 
     /// Set the display rotation
     ///
     /// This method resets the cursor but does not clear the screen.
-    fn set_rotation<'a>(&'a mut self, rot: DisplayRotation) -> Self::WriteFuture<'a> {
-        async move { self.set_rotation(rot).await }
+    async fn set_rotation(&mut self, rot: DisplayRotation) -> Result<(), Self::Error> {
+        self.set_rotation(rot).await
     }
 
-    type InitFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
     /// Initialise and clear the display in graphics mode.
-    fn init<'a>(&'a mut self) -> Self::InitFuture<'a> {
-        async move {
-            self.clear();
-            self.init_with_addr_mode(AddrMode::Horizontal).await
-        }
+    async fn init(&mut self) -> Result<(), Self::Error> {
+        self.clear();
+        self.init_with_addr_mode(AddrMode::Horizontal).await
     }
 }
 

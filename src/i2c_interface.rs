@@ -1,7 +1,6 @@
 //! I2C interface factory
 
 use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
-use core::future::Future;
 use embedded_hal_async as hal;
 
 /// Helper struct to create preconfigured I2C interfaces for the display.
@@ -66,88 +65,82 @@ where
     I2C: hal::i2c::I2c,
 {
     type Error = DisplayError;
-    type WriteFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
 
-    fn send_commands<'a>(&'a mut self, cmds: DataFormat<'a>) -> Self::WriteFuture<'a> {
-        async move {
-            // Copy over given commands to new aray to prefix with command identifier
-            match cmds {
-                DataFormat::U8(slice) => {
-                    let mut writebuf: [u8; 8] = [0; 8];
-                    writebuf[1..=slice.len()].copy_from_slice(&slice[0..slice.len()]);
+    async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), Self::Error> {
+        // Copy over given commands to new aray to prefix with command identifier
+        match cmds {
+            DataFormat::U8(slice) => {
+                let mut writebuf: [u8; 8] = [0; 8];
+                writebuf[1..=slice.len()].copy_from_slice(&slice[0..slice.len()]);
 
-                    self.i2c
-                        .write(self.addr, &writebuf[..=slice.len()])
-                        .await
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                    Ok(())
-                }
-                _ => Err(DisplayError::DataFormatNotImplemented),
+                self.i2c
+                    .write(self.addr, &writebuf[..=slice.len()])
+                    .await
+                    .map_err(|_| DisplayError::BusWriteError)?;
+                Ok(())
             }
+            _ => Err(DisplayError::DataFormatNotImplemented),
         }
     }
 
-    type DataFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
-    fn send_data<'a>(&'a mut self, buf: DataFormat<'a>) -> Self::DataFuture<'a> {
-        async move {
-            match buf {
-                DataFormat::U8(slice) => {
-                    // No-op if the data buffer is empty
-                    if slice.is_empty() {
-                        return Ok(());
-                    }
-
-                    let mut writebuf = [0; 17];
-
-                    // Data mode
-                    writebuf[0] = self.data_byte;
-
-                    for c in slice.chunks(16) {
-                        let chunk_len = c.len();
-
-                        // Copy over all data from buffer, leaving the data command byte intact
-                        writebuf[1..=chunk_len].copy_from_slice(c);
-
-                        self.i2c
-                            .write(self.addr, &writebuf[0..=chunk_len])
-                            .await
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                    }
-
-                    Ok(())
+    async fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), Self::Error> {
+        match buf {
+            DataFormat::U8(slice) => {
+                // No-op if the data buffer is empty
+                if slice.is_empty() {
+                    return Ok(());
                 }
-                DataFormat::U8Iter(iter) => {
-                    let mut writebuf = [0; 17];
-                    let mut i = 1;
-                    let len = writebuf.len();
 
-                    // Data mode
-                    writebuf[0] = self.data_byte;
+                let mut writebuf = [0; 17];
 
-                    for byte in iter.into_iter() {
-                        writebuf[i] = byte;
-                        i += 1;
+                // Data mode
+                writebuf[0] = self.data_byte;
 
-                        if i == len {
-                            self.i2c
-                                .write(self.addr, &writebuf[0..=len])
-                                .await
-                                .map_err(|_| DisplayError::BusWriteError)?;
-                            i = 1;
-                        }
-                    }
+                for c in slice.chunks(16) {
+                    let chunk_len = c.len();
 
-                    if i > 1 {
-                        self.i2c
-                            .write(self.addr, &writebuf[0..=i])
-                            .await
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                    }
+                    // Copy over all data from buffer, leaving the data command byte intact
+                    writebuf[1..=chunk_len].copy_from_slice(c);
 
-                    Ok(())
+                    self.i2c
+                        .write(self.addr, &writebuf[0..=chunk_len])
+                        .await
+                        .map_err(|_| DisplayError::BusWriteError)?;
                 }
-                _ => Err(DisplayError::DataFormatNotImplemented),
+
+                Ok(())
             }
+            DataFormat::U8Iter(iter) => {
+                let mut writebuf = [0; 17];
+                let mut i = 1;
+                let len = writebuf.len();
+
+                // Data mode
+                writebuf[0] = self.data_byte;
+
+                for byte in iter.into_iter() {
+                    writebuf[i] = byte;
+                    i += 1;
+
+                    if i == len {
+                        self.i2c
+                            .write(self.addr, &writebuf[0..=len])
+                            .await
+                            .map_err(|_| DisplayError::BusWriteError)?;
+                        i = 1;
+                    }
+                }
+
+                if i > 1 {
+                    self.i2c
+                        .write(self.addr, &writebuf[0..=i])
+                        .await
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
+            }
+            _ => Err(DisplayError::DataFormatNotImplemented),
         }
     }
 }

@@ -6,25 +6,18 @@ mod terminal;
 use crate::{command::AddrMode, rotation::DisplayRotation, size::DisplaySize, Ssd1306};
 use crate::{DisplayError, WriteOnlyDataCommand};
 pub use buffered_graphics::*;
-use core::future::Future;
 pub use terminal::*;
 
 /// Common functions to all display modes.
 pub trait DisplayConfig {
     /// Error.
     type Error;
-    type WriteFuture<'a>: Future<Output = Result<(), Self::Error>>
-    where
-        Self: 'a;
-    type InitFuture<'a>: Future<Output = Result<(), Self::Error>>
-    where
-        Self: 'a;
 
     /// Set display rotation.
-    fn set_rotation<'a>(&'a mut self, rotation: DisplayRotation) -> Self::WriteFuture<'a>;
+    async fn set_rotation(&mut self, rotation: DisplayRotation) -> Result<(), Self::Error>;
 
     /// Initialise and configure the display for the given mode.
-    fn init<'a>(&'a mut self) -> Self::InitFuture<'a>;
+    async fn init(&mut self) -> Result<(), Self::Error>;
 }
 
 /// A mode with no additional functionality beyond that provided by the base [`Ssd1306`] struct.
@@ -52,21 +45,16 @@ where
     SIZE: DisplaySize,
 {
     type Error = DisplayError;
-    type WriteFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
+
     /// Set the display rotation.
-    fn set_rotation<'a>(&'a mut self, rot: DisplayRotation) -> Self::WriteFuture<'a> {
-        async move {
-            self.set_rotation(rot).await?;
-            Ok(())
-        }
+    async fn set_rotation(&mut self, rot: DisplayRotation) -> Result<(), Self::Error> {
+        self.set_rotation(rot).await?;
+        Ok(())
     }
 
-    type InitFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
     /// Initialise in horizontal addressing mode.
-    fn init<'a>(&'a mut self) -> Self::InitFuture<'a> {
-        async move {
-            self.init_with_addr_mode(AddrMode::Horizontal).await?;
-            Ok(())
-        }
+    async fn init(&mut self) -> Result<(), Self::Error> {
+        self.init_with_addr_mode(AddrMode::Horizontal).await?;
+        Ok(())
     }
 }

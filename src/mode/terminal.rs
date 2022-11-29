@@ -1,6 +1,5 @@
 use crate::{command::AddrMode, mode::DisplayConfig, rotation::DisplayRotation, size::*, Ssd1306};
 use crate::{DisplayError, WriteOnlyDataCommand};
-use core::future::Future;
 use core::{cmp::min, fmt};
 
 /// Extends the [`DisplaySize`](crate::size::DisplaySize) trait
@@ -143,30 +142,24 @@ where
     SIZE: TerminalDisplaySize,
 {
     type Error = TerminalModeError;
-    type WriteFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
 
     /// Set the display rotation
     ///
     /// This method resets the cursor but does not clear the screen.
-    fn set_rotation<'a>(&'a mut self, rot: DisplayRotation) -> Self::WriteFuture<'a> {
-        async move {
-            self.set_rotation(rot).await.terminal_err()?;
-            // Need to reset cursor position, otherwise coordinates can become invalid
-            self.reset_pos().await
-        }
+    async fn set_rotation(&mut self, rot: DisplayRotation) -> Result<(), Self::Error> {
+        self.set_rotation(rot).await.terminal_err()?;
+        // Need to reset cursor position, otherwise coordinates can become invalid
+        self.reset_pos().await
     }
 
-    type InitFuture<'a> = impl Future<Output = Result<(), Self::Error>> + 'a where Self: 'a;
     /// Initialise the display in page mode (i.e. a byte walks down a column of 8 pixels) with
     /// column 0 on the left and column _(SIZE::Width::U8 - 1)_ on the right, but no automatic line
     /// wrapping.
-    fn init<'a>(&'a mut self) -> Self::InitFuture<'a> {
-        async move {
-            self.init_with_addr_mode(AddrMode::Page)
-                .await
-                .terminal_err()?;
-            self.reset_pos().await
-        }
+    async fn init(&mut self) -> Result<(), Self::Error> {
+        self.init_with_addr_mode(AddrMode::Page)
+            .await
+            .terminal_err()?;
+        self.reset_pos().await
     }
 }
 
