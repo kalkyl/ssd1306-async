@@ -43,7 +43,7 @@ async fn main(_spawner: Spawner) {
     config.phase = spi::Phase::CaptureOnSecondTransition;
     config.polarity = spi::Polarity::IdleHigh;
 
-    let mut spi = Spi::new_txonly(p.SPI1, clk, mosi, p.DMA_CH0, Config::default());
+    let spi = Spi::new_txonly(p.SPI1, clk, mosi, p.DMA_CH0, Config::default());
 
     let dc = Output::new(dc, Level::Low);
     let cs = Output::new(cs, Level::Low);
