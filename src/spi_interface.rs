@@ -4,12 +4,11 @@ use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
 type Result = core::result::Result<(), DisplayError>;
 use core::convert::Infallible;
 use embedded_hal::digital::v2::OutputPin;
-use embedded_hal_async::spi::{SpiBus, SpiDevice};
+use embedded_hal_async::spi::SpiDevice;
 
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
     SPI: SpiDevice,
-    SPI::Bus: SpiBus,
 {
     match words {
         DataFormat::U8(slice) => spi
@@ -129,7 +128,6 @@ pub struct SPIInterface<SPI, DC> {
 impl<SPI, DC> SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
-    SPI::Bus: SpiBus,
     DC: OutputPin<Error = Infallible>,
 {
     /// Create new SPI interface for communciation with a display driver
@@ -147,7 +145,6 @@ where
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
-    SPI::Bus: SpiBus,
     DC: OutputPin<Error = Infallible>,
 {
     type Error = DisplayError;

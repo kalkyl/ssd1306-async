@@ -4,8 +4,8 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_rp::i2c::{Config, I2c};
-use embassy_rp::interrupt;
+use embassy_rp::i2c::{Config, I2c, InterruptHandler};
+use embassy_rp::bind_interrupts;
 use embassy_time::{Duration, Timer};
 use embedded_graphics::{
     image::Image,
@@ -14,21 +14,26 @@ use embedded_graphics::{
     prelude::*,
     text::{Baseline, Text},
 };
+use embassy_rp::peripherals::I2C0;
 use ssd1306_async::{prelude::*, I2CDisplayInterface, Ssd1306};
 use tinybmp::Bmp;
 use {defmt_rtt as _, panic_probe as _};
+
+bind_interrupts!(struct Irqs {
+    I2C0_IRQ => InterruptHandler<I2C0>;
+});
+
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     info!("Hello World!");
 
-    let irq = interrupt::take!(I2C0_IRQ);
     let scl = p.PIN_9;
     let sda = p.PIN_8;
     let mut config = Config::default();
     config.frequency = 400_000;
-    let i2c = I2c::new_async(p.I2C0, scl, sda, irq, config);
+    let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
     let interface = I2CDisplayInterface::new(i2c);
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)

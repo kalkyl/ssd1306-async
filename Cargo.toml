@@ -14,7 +14,7 @@ exclude = ["*.jpg", "*.bmp"]
 
 [dependencies]
 embedded-hal = "0.2.5"
-embedded-hal-async = { version = "=0.2.0-alpha.0" }
+embedded-hal-async = { version = "=0.2.0-alpha.1" }
 embassy-futures = "0.1.0"
 embedded-graphics-core = { version = "0.3.2", optional = true }
 byte-slice-cast = { version = "0.3.5", default-features = false }
