@@ -38,10 +38,7 @@ async fn main(_spawner: Spawner) {
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
-    let i2c_bus: &'static _ = make_static!(Mutex::<
-        ThreadModeRawMutex,
-        embassy_rp::i2c::I2c<'_, I2C0, embassy_rp::i2c::Async>,
-    >::new(i2c));
+    let i2c_bus: &'static _ = make_static!(Mutex::<ThreadModeRawMutex, _>::new(i2c));
 
     let i2c_dev1 = I2cDevice::new(i2c_bus);
     let interface = I2CDisplayInterface::new(i2c_dev1);
