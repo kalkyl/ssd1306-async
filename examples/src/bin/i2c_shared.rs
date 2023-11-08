@@ -3,10 +3,13 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
+use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
 use embassy_rp::bind_interrupts;
 use embassy_rp::i2c::{Config, I2c, InterruptHandler};
 use embassy_rp::peripherals::I2C0;
+use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+use embassy_sync::mutex::Mutex;
 use embassy_time::{Duration, Timer};
 use embedded_graphics::{
     image::Image,
@@ -16,6 +19,7 @@ use embedded_graphics::{
     text::{Baseline, Text},
 };
 use ssd1306_async::{prelude::*, I2CDisplayInterface, Ssd1306};
+use static_cell::make_static;
 use tinybmp::Bmp;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -34,7 +38,10 @@ async fn main(_spawner: Spawner) {
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
-    let interface = I2CDisplayInterface::new(i2c);
+    let i2c_bus = &*make_static!(Mutex::<ThreadModeRawMutex, embassy_rp::i2c::I2c<'_, I2C0, embassy_rp::i2c::Async>>::new(i2c));
+
+    let i2c_dev1 = I2cDevice::new(i2c_bus);
+    let interface = I2CDisplayInterface::new(i2c_dev1);
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
     display.init().await.unwrap();

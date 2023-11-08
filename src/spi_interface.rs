@@ -3,7 +3,7 @@
 use crate::{DataFormat, DisplayError, WriteOnlyDataCommand};
 type Result = core::result::Result<(), DisplayError>;
 use core::convert::Infallible;
-use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::digital::OutputPin;
 use embedded_hal_async::spi::SpiDevice;
 
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result

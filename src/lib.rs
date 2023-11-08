@@ -52,7 +52,7 @@ pub use crate::spi_interface::SPIInterface;
 use crate::DataFormat::U8;
 use brightness::Brightness;
 use command::{AddrMode, Command, VcomhLevel};
-use embedded_hal::{blocking::delay::DelayMs, digital::v2::OutputPin};
+use embedded_hal::{delay::DelayUs, digital::OutputPin};
 use error::Error;
 use mode::{BufferedGraphicsMode, TerminalMode};
 use rotation::DisplayRotation;
@@ -412,7 +412,7 @@ impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC>, SIZE, MODE> {
     ) -> Result<(), Error<(), PinE>>
     where
         RST: OutputPin<Error = PinE>,
-        DELAY: DelayMs<u8>,
+        DELAY: DelayUs,
     {
         inner_reset(rst, delay)
     }
@@ -421,7 +421,7 @@ impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC>, SIZE, MODE> {
 fn inner_reset<RST, DELAY, PinE>(rst: &mut RST, delay: &mut DELAY) -> Result<(), Error<(), PinE>>
 where
     RST: OutputPin<Error = PinE>,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     rst.set_high().map_err(Error::Pin)?;
     delay.delay_ms(1);
