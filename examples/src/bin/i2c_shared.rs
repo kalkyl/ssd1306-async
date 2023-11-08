@@ -8,7 +8,7 @@ use embassy_executor::Spawner;
 use embassy_rp::bind_interrupts;
 use embassy_rp::i2c::{Config, I2c, InterruptHandler};
 use embassy_rp::peripherals::I2C0;
-use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_time::{Duration, Timer};
 use embedded_graphics::{
@@ -38,7 +38,7 @@ async fn main(_spawner: Spawner) {
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
-    let i2c_bus: &'static _ = make_static!(Mutex::<ThreadModeRawMutex, _>::new(i2c));
+    let i2c_bus: &'static _ = make_static!(Mutex::<NoopRawMutex, _>::new(i2c));
 
     let interface = I2CDisplayInterface::new(I2cDevice::new(i2c_bus));
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
