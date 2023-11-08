@@ -40,8 +40,7 @@ async fn main(_spawner: Spawner) {
 
     let i2c_bus: &'static _ = make_static!(Mutex::<ThreadModeRawMutex, _>::new(i2c));
 
-    let i2c_dev1 = I2cDevice::new(i2c_bus);
-    let interface = I2CDisplayInterface::new(i2c_dev1);
+    let interface = I2CDisplayInterface::new(I2cDevice::new(i2c_bus));
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
     display.init().await.unwrap();
