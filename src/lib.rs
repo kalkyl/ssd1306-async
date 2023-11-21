@@ -39,12 +39,12 @@
 mod brightness;
 pub mod command;
 mod error;
-mod i2c_interface;
+pub mod i2c_interface;
 pub mod mode;
 pub mod prelude;
 pub mod rotation;
 pub mod size;
-mod spi_interface;
+pub mod spi_interface;
 
 pub use crate::i2c_interface::I2CDisplayInterface;
 use crate::mode::BasicMode;
