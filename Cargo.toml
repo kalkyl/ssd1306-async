@@ -9,15 +9,15 @@ name = "ssd1306-async"
 readme = "README.md"
 repository = "https://github.com/kalkyl/ssd1306-async"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 exclude = ["*.jpg", "*.bmp"]
 
 [dependencies]
-embedded-hal = "1.0.0-alpha.10"
-embedded-hal-async = "=1.0.0-rc.1"
+embedded-hal = "1.0.0"
+embedded-hal-async = "1.0.0"
 embassy-futures = "0.1.0"
-embedded-graphics-core = { version = "0.3.2", optional = true }
-byte-slice-cast = { version = "0.3.5", default-features = false }
+embedded-graphics-core = { version = "0.4.0", optional = true }
+byte-slice-cast = { version = "1.2.2", default-features = false }
 
 [features]
 default = ["graphics"]
