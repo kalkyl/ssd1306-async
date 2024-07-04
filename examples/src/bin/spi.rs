@@ -7,7 +7,7 @@ use embassy_executor::Spawner;
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::spi;
 use embassy_rp::spi::{Config, Spi};
-use embassy_time::{Duration, Timer};
+use embassy_time::{Delay, Duration, Timer};
 use embedded_graphics::{
     image::Image,
     mono_font::{ascii::FONT_9X18_BOLD, MonoTextStyleBuilder},
@@ -15,7 +15,7 @@ use embedded_graphics::{
     prelude::*,
     text::{Baseline, Text},
 };
-use embedded_hal_async::spi::ExclusiveDevice;
+use embedded_hal_bus::spi::ExclusiveDevice;
 use ssd1306_async::{prelude::*, Ssd1306};
 use tinybmp::Bmp;
 use {defmt_rtt as _, panic_probe as _};
@@ -55,8 +55,8 @@ async fn main(_spawner: Spawner) {
     rst.set_high();
 
     // We aren't sharing this SPI bus so use ExclusiveDevice.
-    let device = ExclusiveDevice::new(spi, cs);
-    let interface = ssd1306_async::SPIInterface::new(device, dc);
+    let device = ExclusiveDevice::new(spi, cs, Delay);
+    let interface = ssd1306_async::SPIInterface::new(device.unwrap(), dc);
 
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();

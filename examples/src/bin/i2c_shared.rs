@@ -5,6 +5,7 @@
 use defmt::*;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
+use embassy_rp::i2c::Async;
 use embassy_rp::bind_interrupts;
 use embassy_rp::i2c::{Config, I2c, InterruptHandler};
 use embassy_rp::peripherals::I2C0;
@@ -18,14 +19,17 @@ use embedded_graphics::{
     prelude::*,
     text::{Baseline, Text},
 };
+use static_cell::StaticCell;
 use ssd1306_async::{prelude::*, I2CDisplayInterface, Ssd1306};
-use static_cell::make_static;
 use tinybmp::Bmp;
 use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct Irqs {
     I2C0_IRQ => InterruptHandler<I2C0>;
 });
+
+static I2C_BUS_CELL: StaticCell<Mutex::<NoopRawMutex, I2c<I2C0, Async>>> = StaticCell::new();
+
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
@@ -38,7 +42,7 @@ async fn main(_spawner: Spawner) {
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
-    let i2c_bus: &'static _ = make_static!(Mutex::<NoopRawMutex, _>::new(i2c));
+    let i2c_bus: &'static _ = I2C_BUS_CELL.init(Mutex::<NoopRawMutex, _>::new(i2c));
 
     let interface = I2CDisplayInterface::new(I2cDevice::new(i2c_bus));
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)

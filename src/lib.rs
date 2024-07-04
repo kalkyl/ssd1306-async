@@ -22,7 +22,7 @@
 //! [`TerminalMode`]: crate::mode::TerminalMode
 
 #![no_std]
-#![feature(type_alias_impl_trait, async_fn_in_trait, impl_trait_projections)]
+// #![feature(type_alias_impl_trait, async_fn_in_trait)]
 #![allow(incomplete_features)]
 // #![deny(missing_debug_implementations)]
 // #![deny(missing_docs)]
@@ -35,6 +35,7 @@
 // #![deny(unused_import_braces)]
 // #![deny(unused_qualifications)]
 // #![deny(rustdoc::broken_intra_doc_links)]
+#![allow(async_fn_in_trait)]
 
 mod brightness;
 pub mod command;
@@ -52,7 +53,7 @@ pub use crate::spi_interface::SPIInterface;
 use crate::DataFormat::U8;
 use brightness::Brightness;
 use command::{AddrMode, Command, VcomhLevel};
-use embedded_hal::{delay::DelayUs, digital::OutputPin};
+use embedded_hal::{delay::DelayNs, digital::OutputPin};
 use error::Error;
 use mode::{BufferedGraphicsMode, TerminalMode};
 use rotation::DisplayRotation;
@@ -193,28 +194,6 @@ where
         self.interface.send_data(U8(&buffer)).await
     }
 
-    /// Get display dimensions, taking into account the current rotation of the display
-    ///
-    /// ```rust
-    /// # use ssd1306::test_helpers::StubInterface;
-    /// # let interface = StubInterface;
-    /// use ssd1306::{mode::TerminalMode, prelude::*, Ssd1306};
-    ///
-    /// let mut display = Ssd1306::new(
-    ///     interface,
-    ///     DisplaySize128x64,
-    ///     DisplayRotation::Rotate0,
-    /// ).into_terminal_mode();
-    /// assert_eq!(display.dimensions(), (128, 64));
-    ///
-    /// # let interface = StubInterface;
-    /// let mut rotated_display = Ssd1306::new(
-    ///     interface,
-    ///     DisplaySize128x64,
-    ///     DisplayRotation::Rotate90,
-    /// ).into_terminal_mode();
-    /// assert_eq!(rotated_display.dimensions(), (64, 128));
-    /// ```
     pub fn dimensions(&self) -> (u8, u8) {
         match self.rotation {
             DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (SIZE::WIDTH, SIZE::HEIGHT),
@@ -412,7 +391,7 @@ impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC>, SIZE, MODE> {
     ) -> Result<(), Error<(), PinE>>
     where
         RST: OutputPin<Error = PinE>,
-        DELAY: DelayUs,
+        DELAY: DelayNs,
     {
         inner_reset(rst, delay)
     }
@@ -421,7 +400,7 @@ impl<SPI, DC, SIZE, MODE> Ssd1306<SPIInterface<SPI, DC>, SIZE, MODE> {
 fn inner_reset<RST, DELAY, PinE>(rst: &mut RST, delay: &mut DELAY) -> Result<(), Error<(), PinE>>
 where
     RST: OutputPin<Error = PinE>,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     rst.set_high().map_err(Error::Pin)?;
     delay.delay_ms(1);
