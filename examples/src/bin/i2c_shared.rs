@@ -28,7 +28,7 @@ bind_interrupts!(struct Irqs {
     I2C0_IRQ => InterruptHandler<I2C0>;
 });
 
-static i2c_bus_cell: StaticCell<Mutex::<NoopRawMutex, I2c<I2C0, Async>>> = StaticCell::new();
+static I2C_BUS_CELL: StaticCell<Mutex::<NoopRawMutex, I2c<I2C0, Async>>> = StaticCell::new();
 
 
 #[embassy_executor::main]
@@ -42,7 +42,7 @@ async fn main(_spawner: Spawner) {
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
 
-    let i2c_bus: &'static _ = i2c_bus_cell.init(Mutex::<NoopRawMutex, _>::new(i2c));
+    let i2c_bus: &'static _ = I2C_BUS_CELL.init(Mutex::<NoopRawMutex, _>::new(i2c));
 
     let interface = I2CDisplayInterface::new(I2cDevice::new(i2c_bus));
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
