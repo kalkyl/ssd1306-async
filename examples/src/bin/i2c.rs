@@ -27,9 +27,9 @@ bind_interrupts!(struct Irqs {
 async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     info!("Hello World!");
-
-    let scl = p.PIN_9;
-    let sda = p.PIN_8;
+    
+    let scl = p.PIN_13;
+    let sda = p.PIN_12;
     let mut config = Config::default();
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
@@ -39,18 +39,21 @@ async fn main(_spawner: Spawner) {
         .into_buffered_graphics_mode();
     display.init().await.unwrap();
 
+    
     let bmp = Bmp::from_slice(include_bytes!("../../rust.bmp")).expect("Failed to load BMP image");
-
+    
     // The image is an RGB565 encoded BMP, so specifying the type as `Image<Bmp<Rgb565>>` will read
     // the pixels correctly
     let im: Image<Bmp<Rgb565>> = Image::new(&bmp, Point::new(32, 0));
-
+    
     // We use the `color_converted` method here to automatically convert the RGB565 image data into
     // BinaryColor values.
     im.draw(&mut display.color_converted()).unwrap();
     display.flush().await.unwrap();
-
+    
     loop {
+        // Set the display brightness to maximum
+        display.set_brightness(Brightness::BRIGHTEST).await.unwrap();
         Timer::after(Duration::from_millis(1_000)).await;
         info!("Tick");
         display.clear();
@@ -67,6 +70,9 @@ async fn main(_spawner: Spawner) {
 
         display.flush().await.unwrap();
 
+        // Set the display brightness to minimum
+        display.set_brightness(Brightness::DIMMEST).await.unwrap();
+        
         Timer::after(Duration::from_millis(1_000)).await;
         info!("Tick");
         display.clear();
