@@ -28,8 +28,8 @@ async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     info!("Hello World!");
     
-    let scl = p.PIN_13;
-    let sda = p.PIN_12;
+    let scl = p.PIN_9;
+    let sda = p.PIN_8;
     let mut config = Config::default();
     config.frequency = 400_000;
     let i2c = I2c::new_async(p.I2C0, scl, sda, Irqs, config);
@@ -72,7 +72,7 @@ async fn main(_spawner: Spawner) {
 
         // Set the display brightness to minimum
         display.set_brightness(Brightness::DIMMEST).await.unwrap();
-        
+
         Timer::after(Duration::from_millis(1_000)).await;
         info!("Tick");
         display.clear();
